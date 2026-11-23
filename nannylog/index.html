@@ -11,84 +11,8 @@
 <meta name="theme-color" content="#16150F" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="styles.css">
 <title>Nanny Log</title>
-<style>
-:root{
-  --bg:#F6F4EE;--card:#FFFFFF;--ink:#22211C;--sub:#6B6A63;--line:#E4E1D8;
-  --accent:#C2502E;--accent-ink:#FFFFFF;--soft:#FBEDE7;--ok:#1D7A5A;--okbg:#E3F3EC;
-  --warn:#9A5B07;--warnbg:#FCF1DC;--bad:#B3261E;--badbg:#FCE9E8;
-  --r:16px;--safe-b:env(safe-area-inset-bottom);--safe-t:env(safe-area-inset-top);
-}
-@media (prefers-color-scheme:dark){:root{
-  --bg:#16150F;--card:#22211B;--ink:#F1EFE8;--sub:#A9A79E;--line:#35342D;
-  --accent:#E8774F;--accent-ink:#1A0E08;--soft:#3A231A;--ok:#5DCAA5;--okbg:#14332A;
-  --warn:#F0B35A;--warnbg:#3A2A10;--bad:#F28B82;--badbg:#3D1715;}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif}
-body{padding-top:var(--safe-t);padding-bottom:calc(84px + var(--safe-b));min-height:100vh}
-button,input,select,textarea{font:inherit;color:inherit}
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 18px 8px;border-bottom:1px solid transparent}
-header.scrolled{border-bottom-color:var(--line)}
-.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
-h1{font-size:28px;margin:0;font-weight:700;letter-spacing:-.3px}
-.sub{color:var(--sub);font-size:14px}
-.datebar{display:flex;align-items:center;gap:6px;margin-top:6px}
-.datebar button{border:none;background:var(--card);border-radius:10px;padding:6px 12px;font-size:15px}
-.datebar .d{flex:1;text-align:center;font-weight:600}
-main{padding:8px 16px}
-.card{background:var(--card);border-radius:var(--r);padding:14px;margin:10px 0;border:1px solid var(--line)}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.qa{border:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12.5px;min-height:72px}
-.qa .ic{font-size:24px;line-height:1}
-.qa:active{transform:scale(.96)}
-.big{width:100%;border:none;border-radius:14px;padding:14px;font-weight:600;font-size:17px;background:var(--accent);color:var(--accent-ink);display:flex;gap:10px;align-items:center;justify-content:center}
-.big.sec{background:var(--soft);color:var(--accent)}
-.row{display:flex;gap:10px;align-items:center}
-.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px}
-.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.tl{position:relative;margin-left:8px;padding-left:18px;border-left:2px solid var(--line)}
-.item{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0}
-.item:before{content:"";position:absolute;left:-26px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid var(--bg)}
-.item.incident:before{background:var(--bad)}
-.item .t{font-size:13px;color:var(--sub)}
-.item .h{font-weight:600;display:flex;gap:6px;align-items:center}
-.item .tx{white-space:pre-wrap;margin-top:2px}
-.item img{max-width:100%;border-radius:10px;margin-top:8px;display:block}
-.item audio{width:100%;margin-top:8px}
-.tag{font-size:11.5px;border-radius:6px;padding:1px 7px;background:var(--soft);color:var(--accent);font-weight:600}
-.empty{text-align:center;color:var(--sub);padding:30px 10px}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + var(--safe-b))}
-nav button{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--sub);padding:4px 0}
-nav button .ic{font-size:22px}
-nav button.on{color:var(--accent);font-weight:600}
-.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20;display:none}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--bg);border-radius:22px 22px 0 0;padding:10px 16px calc(18px + var(--safe-b));max-height:92vh;overflow:auto;transform:translateY(105%);transition:transform .25s ease}
-.sheet.open{transform:none}
-.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 10px}
-label{display:block;font-size:13px;color:var(--sub);margin:12px 0 4px;font-weight:600}
-input[type=text],input[type=number],input[type=time],input[type=date],input[type=tel],select,textarea{width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:11px 12px;font-size:16px}
-textarea{min-height:110px;resize:vertical}
-.mic{width:76px;height:76px;border-radius:50%;border:none;background:var(--accent);color:var(--accent-ink);font-size:30px;display:flex;align-items:center;justify-content:center;margin:6px auto}
-.mic.rec{background:var(--bad);animation:pulse 1.2s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(179,38,30,.45)}70%{box-shadow:0 0 0 18px rgba(179,38,30,0)}100%{box-shadow:0 0 0 0 rgba(179,38,30,0)}}
-@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}.sheet{transition:none}}
-.hint{font-size:13px;color:var(--sub);text-align:center}
-.note{font-size:13px;border-radius:12px;padding:10px 12px;background:var(--warnbg);color:var(--warn)}
-.okn{background:var(--okbg);color:var(--ok)}
-.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
-.stat b{display:block;font-size:22px}
-.list .li{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-.list .li:last-child{border-bottom:none}
-.link{border:none;background:none;color:var(--accent);font-weight:600;padding:6px 0}
-.danger{color:var(--bad)}
-.toast{position:fixed;left:50%;bottom:calc(96px + var(--safe-b));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none}
-.toast.show{opacity:1}
-.view{display:none}.view.on{display:block}
-.emerg a{display:flex;justify-content:space-between;text-decoration:none;color:inherit;padding:12px 0;border-bottom:1px solid var(--line)}
-.emerg a b{color:var(--accent)}
-pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:0}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-</style>
 </head>
 <body>
 <header id="hdr">
@@ -102,13 +26,16 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
 </header>
 
 <main>
-<!-- ============ TODAY / LOG ============ -->
+<!-- ============ LOG ============ -->
 <section class="view on" id="v-log">
+  <div id="dueBox"></div>
+  <div id="timerBox"></div>
   <button class="big" id="voiceBtn"><span>🎙️</span> Voice note</button>
   <div class="card" style="padding:12px">
     <div class="sub" style="margin-bottom:8px;font-weight:600">Quick add</div>
     <div class="grid" id="quick"></div>
   </div>
+  <div id="todayEvents"></div>
   <div class="row" id="childFilter" style="flex-wrap:wrap;gap:6px;margin:6px 0"></div>
   <div class="row" style="gap:8px;margin:8px 0">
     <div class="stat"><b id="sMeals">0</b><span class="sub">Meals</span></div>
@@ -116,6 +43,32 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
     <div class="stat"><b id="sDiaper">0</b><span class="sub">Diaper/Potty</span></div>
   </div>
   <div class="tl" id="timeline"></div>
+</section>
+
+<!-- ============ PLAN ============ -->
+<section class="view" id="v-plan">
+  <div class="seg" id="planSeg">
+    <button class="on" data-p="routines">Routines</button>
+    <button data-p="events">Calendar</button>
+    <button data-p="shop">Shopping</button>
+  </div>
+  <div id="p-routines"></div>
+  <div id="p-events" style="display:none">
+    <div class="card">
+      <div class="hrow"><div class="sub" style="font-weight:600">Next 14 days</div><button class="link" id="addEvent">+ Add</button></div>
+      <div id="eventList"></div>
+    </div>
+    <p class="hint">Tip: tap an event, then “Add to iPhone Calendar” to get a reminder alert even when the app is closed.</p>
+  </div>
+  <div id="p-shop" style="display:none">
+    <div class="card">
+      <div class="sub" style="font-weight:600">Running low? Tap to add</div>
+      <div class="qchips" id="shopQuick"></div>
+      <div class="row"><input type="text" id="shopInput" placeholder="Add item, e.g. size 4 diapers"><button class="sbtn" id="shopAdd">Add</button></div>
+    </div>
+    <div class="card"><div class="hrow"><div class="sub" style="font-weight:600">List</div><button class="link" id="shopClear">Clear done</button></div><div id="shopList"></div></div>
+    <button class="big sec" id="shopShare">📤 Send list to parents</button>
+  </div>
 </section>
 
 <!-- ============ REPORT ============ -->
@@ -129,6 +82,12 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
     </div>
   </div>
   <div class="card">
+    <div class="sub" style="font-weight:600">Weekly PDF report</div>
+    <p class="small">All days of the week for each child: food, naps, activities, medicine and incidents.</p>
+    <div class="seg" id="repWeekSeg"><button class="on" data-w="0">This week</button><button data-w="-1">Last week</button></div>
+    <button class="big" id="weekPdf">📄 Create weekly PDF</button>
+  </div>
+  <div class="card">
     <div class="sub" style="font-weight:600">Search all logs</div>
     <input type="text" id="searchBox" placeholder="e.g. fever, park, Maya" style="margin-top:8px">
     <div id="searchRes" class="list"></div>
@@ -137,11 +96,13 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
 
 <!-- ============ HOURS ============ -->
 <section class="view" id="v-hours">
+  <div class="seg" id="hrsWeekSeg"><button class="on" data-w="0">This week</button><button data-w="-1">Last week</button></div>
   <div class="row" style="gap:8px">
-    <div class="stat"><b id="hWeek">0.0</b><span class="sub">Hours this week</span></div>
+    <div class="stat"><b id="hWeek">0.0</b><span class="sub">Hours</span></div>
     <div class="stat"><b id="hPay">$0</b><span class="sub">Est. gross pay</span></div>
   </div>
   <div class="note" id="otNote" style="display:none;margin-top:10px"></div>
+  <button class="big" id="tsPdf" style="margin-top:10px">📄 Timesheet PDF for pay</button>
   <div class="card">
     <div class="hrow"><div class="sub" style="font-weight:600">Shifts</div><button class="link" id="addShift">+ Add shift</button></div>
     <div class="list" id="shiftList"></div>
@@ -149,7 +110,7 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
   <p class="hint">Week runs Sunday to Saturday. Ontario overtime generally starts after 44 hours in a week (1.5× pay). Estimates only, before tax.</p>
 </section>
 
-<!-- ============ SETTINGS / MORE ============ -->
+<!-- ============ MORE ============ -->
 <section class="view" id="v-more">
   <div class="card emerg">
     <div class="sub" style="font-weight:600">Emergency</div>
@@ -159,11 +120,24 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
     <a id="parentCall" href="#"><span id="parentLbl">Parent</span><b id="parentNum">Add in settings</b></a>
     <div id="allergyBox" class="note" style="margin-top:10px;display:none"></div>
   </div>
+
+  <div class="card">
+    <div class="hrow"><div class="sub" style="font-weight:600">Share with parents (live view)</div><span class="sync" id="syncDot"><i></i><span id="syncTxt">off</span></span></div>
+    <p class="small">Parents open a private link and see today's log, timers, shopping list and calendar update live.</p>
+    <button class="big sec" id="openShare">Set up / get parent link</button>
+  </div>
+
+  <div class="card">
+    <div class="hrow"><div class="sub" style="font-weight:600">Medicine permission forms</div><button class="link" id="addPerm">+ New</button></div>
+    <div class="list" id="permList"></div>
+  </div>
+
   <div class="card">
     <div class="sub" style="font-weight:600">Children</div>
     <div class="list" id="kidList"></div>
     <button class="link" id="addKid">+ Add child</button>
   </div>
+
   <div class="card">
     <div class="sub" style="font-weight:600">Settings</div>
     <label for="setName">Your name</label><input type="text" id="setName" placeholder="e.g. Nusrat">
@@ -177,10 +151,13 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
     </select>
     <label for="setAudio">Keep audio recording with voice notes</label>
     <select id="setAudio"><option value="1">Yes</option><option value="0">No, text only</option></select>
+    <label for="setTr">Translate Bangla notes to English</label>
+    <select id="setTr"><option value="1">Yes (uses MyMemory online translator)</option><option value="0">No</option></select>
   </div>
+
   <div class="card">
     <div class="sub" style="font-weight:600">Backup</div>
-    <p class="hint" style="text-align:left">Your log is saved only on this phone. Make a backup every week and keep it in Files or iCloud Drive.</p>
+    <p class="hint" style="text-align:left">Your log is saved on this phone. Make a backup every week and keep it in Files or iCloud Drive.</p>
     <button class="big sec" id="exportJson">Download backup</button>
     <div style="height:8px"></div>
     <button class="big sec" id="exportCsv">Export log as spreadsheet (CSV)</button>
@@ -188,12 +165,13 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
     <label class="big sec" for="importFile" style="margin:0;color:var(--accent);font-size:17px">Restore from backup</label>
     <input type="file" id="importFile" accept="application/json,.json" class="sr">
   </div>
-  <p class="hint">Nanny Log v1.0 · data stays on your device</p>
+  <p class="hint">Nanny Log v2.0</p>
 </section>
 </main>
 
 <nav id="nav">
   <button class="on" data-v="log"><span class="ic">📝</span>Log</button>
+  <button data-v="plan"><span class="ic">✅</span>Plan</button>
   <button data-v="report"><span class="ic">📤</span>Report</button>
   <button data-v="hours"><span class="ic">⏱️</span>Hours</button>
   <button data-v="more"><span class="ic">⚙️</span>More</button>
@@ -202,347 +180,7 @@ pre.rep{white-space:pre-wrap;font:14px/1.5 -apple-system,sans-serif;background:v
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
-
-<script>
-/* ================= storage (IndexedDB) ================= */
-const DB_NAME='nannylog', DB_VER=1;
-let db;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);
-  r.onupgradeneeded=e=>{const d=e.target.result;
-    if(!d.objectStoreNames.contains('entries')){const s=d.createObjectStore('entries',{keyPath:'id'});s.createIndex('date','date');}
-    if(!d.objectStoreNames.contains('shifts')){const s=d.createObjectStore('shifts',{keyPath:'id'});s.createIndex('date','date');}
-    if(!d.objectStoreNames.contains('kv'))d.createObjectStore('kv');};
-  r.onsuccess=()=>{db=r.result;res(db)};r.onerror=()=>rej(r.error);});}
-function tx(store,mode='readonly'){return db.transaction(store,mode).objectStore(store)}
-const p=req=>new Promise((res,rej)=>{req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error)});
-const put=(s,v,k)=>p(tx(s,'readwrite').put(v,k));
-const del=(s,k)=>p(tx(s,'readwrite').delete(k));
-const getAll=s=>p(tx(s).getAll());
-const byDate=(s,d)=>p(tx(s).index('date').getAll(d));
-const kvGet=k=>p(tx('kv').get(k));
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
-
-/* ================= state ================= */
-let S={name:'',parent:'',phone:'',rate:17.95,lang:'en-CA',keepAudio:'1',kids:[]};
-let curDate=today(); let filterKid='all';
-function today(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function fmtDate(s){const d=new Date(s+'T12:00');return d.toLocaleDateString('en-CA',{weekday:'long',month:'short',day:'numeric'})}
-function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'})}
-function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-async function saveSettings(){await put('kv',S,'settings')}
-
-const TYPES={
-  meal:{ic:'🍽️',lbl:'Meal'}, snack:{ic:'🍎',lbl:'Snack'}, bottle:{ic:'🍼',lbl:'Bottle'},
-  nap:{ic:'😴',lbl:'Nap'}, diaper:{ic:'🧷',lbl:'Diaper'}, potty:{ic:'🚽',lbl:'Potty'},
-  play:{ic:'🧩',lbl:'Activity'}, outing:{ic:'🌳',lbl:'Outing'}, school:{ic:'🎒',lbl:'School'},
-  medicine:{ic:'💊',lbl:'Medicine'}, mood:{ic:'🙂',lbl:'Mood'}, incident:{ic:'🩹',lbl:'Incident'},
-  photo:{ic:'📷',lbl:'Photo'}, note:{ic:'📝',lbl:'Note'}, voice:{ic:'🎙️',lbl:'Voice note'}
-};
-const QUICK=['meal','snack','bottle','nap','diaper','potty','play','outing','school','medicine','mood','incident','photo','note'];
-
-/* ================= ui helpers ================= */
-const $=id=>document.getElementById(id);
-function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800)}
-function openSheet(html,onReady){$('sheetBody').innerHTML=html;$('sheetBg').style.display='block';requestAnimationFrame(()=>$('sheet').classList.add('open'));onReady&&onReady()}
-function closeSheet(){stopVoice();$('sheet').classList.remove('open');setTimeout(()=>{$('sheetBg').style.display='none';$('sheetBody').innerHTML=''},250)}
-$('sheetBg').onclick=closeSheet;
-window.addEventListener('scroll',()=>$('hdr').classList.toggle('scrolled',scrollY>4));
-
-function kidChips(sel,id='kidSel'){
-  if(!S.kids.length)return '<p class="hint" style="text-align:left">Tip: add children in More → Children.</p>';
-  return `<label>Child</label><div class="row" id="${id}" style="flex-wrap:wrap;gap:6px">`+
-    S.kids.map(k=>`<button type="button" class="chip ${sel.includes(k.id)?'on':''}" data-k="${k.id}">${esc(k.name)}</button>`).join('')+'</div>';
-}
-function bindKidChips(id='kidSel'){const w=$(id);if(!w)return;w.querySelectorAll('.chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'))}
-function readKids(id='kidSel'){const w=$(id);if(!w)return [];return [...w.querySelectorAll('.chip.on')].map(b=>b.dataset.k)}
-function kidNames(ids){return (ids||[]).map(i=>(S.kids.find(k=>k.id===i)||{}).name).filter(Boolean).join(', ')}
-function nowTimeStr(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
-function tsFrom(dateStr,timeStr){return new Date(dateStr+'T'+(timeStr||'12:00')).getTime()}
-
-/* ================= entry editor ================= */
-const DETAIL={
-  meal:[['what','What did they eat?','text','e.g. rice, dal, chicken'],['amount','How much?','select',['All','Most','Half','A little','None']]],
-  snack:[['what','Snack','text','e.g. apple slices + cheese'],['amount','How much?','select',['All','Most','Half','A little','None']]],
-  bottle:[['ml','Amount (ml)','number','e.g. 150'],['kind','Type','select',['Breast milk','Formula','Milk','Water']]],
-  nap:[['start','Start','time'],['end','End','time']],
-  diaper:[['kind','Diaper','select',['Wet','Dirty','Wet + dirty','Dry']]],
-  potty:[['kind','Potty','select',['Pee','Poop','Tried, nothing','Accident']]],
-  play:[['what','Activity','text','e.g. blocks, painting, reading']],
-  outing:[['where','Where?','text','e.g. Riverdale Park, library']],
-  school:[['kind','School','select',['Drop-off','Pick-up','Homework']]],
-  medicine:[['name','Medicine','text','name and dose'],['permission','Written permission from parent?','select',['Yes','No']]],
-  mood:[['kind','Mood','select',['Happy','Calm','Tired','Cranky','Sad','Unwell']]],
-  incident:[['what','What happened?','text','e.g. fell at park, scraped knee'],['action','What did you do?','text','e.g. cleaned, ice pack'],['told','Parent informed?','select',['Yes, called','Yes, text','Will tell at pick-up']]],
-  photo:[], note:[]
-};
-function detailHtml(type,d={}){return (DETAIL[type]||[]).map(([k,l,t,ph])=>{
-  if(t==='select')return `<label>${l}</label><select data-f="${k}">`+ph.map(o=>`<option ${d[k]===o?'selected':''}>${o}</option>`).join('')+'</select>';
-  return `<label>${l}</label><input type="${t}" data-f="${k}" value="${esc(d[k]||'')}" placeholder="${ph||''}">`;}).join('')}
-function summary(e){const d=e.details||{};
-  switch(e.type){case 'meal':case 'snack':return [d.what,d.amount&&`(${d.amount.toLowerCase()})`].filter(Boolean).join(' ');
-  case 'bottle':return [d.ml&&d.ml+' ml',d.kind].filter(Boolean).join(' ');
-  case 'nap':return d.start?`${d.start}${d.end?' – '+d.end:' (sleeping)'}${napMin(e)?' · '+mins(napMin(e)):''}`:'';
-  case 'diaper':case 'potty':case 'mood':case 'school':return d.kind||'';
-  case 'play':return d.what||''; case 'outing':return d.where||'';
-  case 'medicine':return [d.name,d.permission&&('permission: '+d.permission)].filter(Boolean).join(' · ');
-  case 'incident':return [d.what,d.action&&('Action: '+d.action),d.told&&('Parent: '+d.told)].filter(Boolean).join('\n');
-  default:return '';}}
-function napMin(e){const d=e.details||{};if(!d.start||!d.end)return 0;const [a,b]=d.start.split(':').map(Number),[c,f]=d.end.split(':').map(Number);let m=(c*60+f)-(a*60+b);if(m<0)m+=1440;return m}
-function mins(m){return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m}m`}
-
-async function openEntry(type,existing){
-  const e=existing||{id:uid(),date:curDate,type,kids:S.kids.length===1?[S.kids[0].id]:[],details:{},text:''};
-  if(!existing&&type==='nap')e.details.start=nowTimeStr();
-  const t=TYPES[e.type];
-  openSheet(`
-    <div class="hrow"><h2 style="margin:0">${t.ic} ${t.lbl}</h2><button class="link" id="cancelE">Cancel</button></div>
-    ${kidChips(e.kids)}
-    <label for="eTime" ${e.type==='nap'?'style="display:none"':''}>Time</label><input ${e.type==='nap'?'style="display:none"':''} type="time" id="eTime" value="${existing?new Date(e.ts).toTimeString().slice(0,5):nowTimeStr()}">
-    ${detailHtml(e.type,e.details)}
-    <label for="eText">Notes</label>
-    <textarea id="eText" placeholder="Type, or tap the 🎤 on your keyboard to dictate">${esc(e.text)}</textarea>
-    ${e.type==='photo'||e.photo?`<label>Photo</label><input type="file" id="ePhoto" accept="image/*" capture="environment"><div id="ePrev"></div>`:''}
-    ${e.type==='medicine'?'<div class="note" style="margin-top:10px">Give medicine only with the parent\'s written permission.</div>':''}
-    ${e.type==='incident'?'<div class="note" style="margin-top:10px">Tell the parents about every injury, even small ones. Call 911 if it is serious.</div>':''}
-    <div style="height:14px"></div>
-    <button class="big" id="saveE">Save</button>
-    ${existing?'<div style="text-align:center;margin-top:8px"><button class="link danger" id="delE">Delete entry</button></div>':''}
-  `,()=>{
-    bindKidChips();$('cancelE').onclick=closeSheet;
-    let photoBlob=e.photo||null;
-    if(photoBlob&&$('ePrev'))$('ePrev').innerHTML=`<img src="${URL.createObjectURL(photoBlob)}" style="max-width:100%;border-radius:10px;margin-top:8px">`;
-    if($('ePhoto'))$('ePhoto').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;photoBlob=await shrink(f);$('ePrev').innerHTML=`<img src="${URL.createObjectURL(photoBlob)}" style="max-width:100%;border-radius:10px;margin-top:8px">`};
-    $('saveE').onclick=async()=>{
-      const det={};document.querySelectorAll('#sheetBody [data-f]').forEach(i=>det[i.dataset.f]=i.value.trim());
-      e.details=det;e.text=$('eText').value.trim();e.kids=readKids();e.ts=tsFrom(e.date,(e.type==='nap'&&det.start)?det.start:$('eTime').value);
-      if(photoBlob)e.photo=photoBlob;
-      if(e.type==='photo'&&!e.photo&&!e.text){toast('Add a photo or a note');return}
-      await put('entries',e);closeSheet();toast('Saved');render();};
-    if($('delE'))$('delE').onclick=async()=>{if(confirmDel()){await del('entries',e.id);closeSheet();toast('Deleted');render()}};
-  });
-}
-function confirmDel(){return window.confirm('Delete this entry?')}
-function shrink(file,max=1280){return new Promise(res=>{const img=new Image();img.onload=()=>{const s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=img.width*s;c.height=img.height*s;c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.toBlob(b=>res(b||file),'image/jpeg',.82)};img.onerror=()=>res(file);img.src=URL.createObjectURL(file)})}
-
-/* ================= voice note ================= */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let rec=null, recOn=false, mediaRec=null, audioChunks=[], audioBlob=null, finalText='';
-function stopVoice(){try{rec&&recOn&&rec.stop()}catch(_){}recOn=false;try{mediaRec&&mediaRec.state==='recording'&&mediaRec.stop()}catch(_){}}
-function openVoice(){
-  audioBlob=null;finalText='';
-  openSheet(`
-    <div class="hrow"><h2 style="margin:0">🎙️ Voice note</h2><button class="link" id="cancelV">Cancel</button></div>
-    ${kidChips(S.kids.length===1?[S.kids[0].id]:[])}
-    <div style="text-align:center;margin-top:10px">
-      <button class="mic" id="micBtn" aria-label="Start recording">🎤</button>
-      <div class="hint" id="micHint">${SR?'Tap to start speaking. Tap again to stop.':'Live speech-to-text is not available here. Tap in the box and use the 🎤 on the iPhone keyboard to dictate.'}</div>
-    </div>
-    <label for="vText">Text (you can edit it)</label>
-    <textarea id="vText" placeholder="Your words will appear here…"></textarea>
-    <label for="vType">Save as</label>
-    <select id="vType">${QUICK.filter(q=>q!=='photo').map(q=>`<option value="${q}" ${q==='note'?'selected':''}>${TYPES[q].lbl}</option>`).join('')}</select>
-    <div id="vAudio"></div>
-    <div style="height:14px"></div>
-    <button class="big" id="saveV">Save</button>
-  `,()=>{
-    bindKidChips();$('cancelV').onclick=closeSheet;
-    $('micBtn').onclick=()=>recOn?stopVoice():startVoice();
-    $('saveV').onclick=async()=>{
-      stopVoice();await new Promise(r=>setTimeout(r,350));
-      const text=$('vText').value.trim();if(!text&&!audioBlob){toast('Nothing to save yet');return}
-      const e={id:uid(),date:curDate,ts:curDate===today()?Date.now():tsFrom(curDate,nowTimeStr()),type:$('vType').value,kids:readKids(),details:{},text,voice:true};
-      if(audioBlob&&S.keepAudio==='1')e.audio=audioBlob;
-      await put('entries',e);closeSheet();toast('Voice note saved');render();};
-  });
-}
-async function startVoice(){
-  const box=$('vText');finalText=box.value?box.value.trim()+' ':'';
-  if(!SR){box.focus();return}
-  if(S.keepAudio==='1'&&navigator.mediaDevices&&window.MediaRecorder){
-    try{const st=await navigator.mediaDevices.getUserMedia({audio:true});audioChunks=[];
-      mediaRec=new MediaRecorder(st);mediaRec.ondataavailable=ev=>ev.data.size&&audioChunks.push(ev.data);
-      mediaRec.onstop=()=>{st.getTracks().forEach(t=>t.stop());audioBlob=new Blob(audioChunks,{type:mediaRec.mimeType||'audio/mp4'});
-        if($('vAudio'))$('vAudio').innerHTML=`<label>Recording</label><audio controls src="${URL.createObjectURL(audioBlob)}"></audio>`};
-      mediaRec.start();}catch(err){mediaRec=null}
-  }
-  rec=new SR();rec.lang=S.lang;rec.interimResults=true;rec.continuous=true;
-  rec.onresult=ev=>{let interim='';for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];if(r.isFinal)finalText+=r[0].transcript.trim()+' ';else interim+=r[0].transcript}
-    box.value=(finalText+interim).trimStart();};
-  rec.onerror=ev=>{$('micHint').textContent=ev.error==='not-allowed'?'Microphone or speech permission was denied. Allow it in Settings, or use keyboard dictation.':'Speech stopped ('+ev.error+'). You can type or use keyboard dictation.';};
-  rec.onend=()=>{if(recOn){try{rec.start()}catch(_){recOn=false;uiMic()}}else uiMic()};
-  try{rec.start();recOn=true;uiMic()}catch(err){$('micHint').textContent='Could not start. Use keyboard dictation instead.'}
-}
-function uiMic(){const b=$('micBtn');if(!b)return;b.classList.toggle('rec',recOn);b.textContent=recOn?'■':'🎤';b.setAttribute('aria-label',recOn?'Stop recording':'Start recording');
-  $('micHint').textContent=recOn?'Listening… tap ■ to stop.':(SR?'Tap to speak again, or edit the text.':$('micHint').textContent);
-  if(!recOn&&mediaRec&&mediaRec.state==='recording')mediaRec.stop();}
-
-/* ================= render log ================= */
-async function render(){
-  $('dateLbl').textContent=curDate===today()?'Today · '+fmtDate(curDate).split(',')[1]:fmtDate(curDate);
-  $('title').textContent=({log:curDate===today()?'Today':'Log',report:'Report',hours:'Hours',more:'More'})[curView];
-  let list=(await byDate('entries',curDate)).sort((a,b)=>a.ts-b.ts);
-  const fk=$('childFilter');
-  fk.innerHTML=S.kids.length>1?['all',...S.kids.map(k=>k.id)].map(id=>`<button class="chip ${filterKid===id?'on':''}" data-f="${id}">${id==='all'?'All':esc(S.kids.find(k=>k.id===id).name)}</button>`).join(''):'';
-  fk.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{filterKid=b.dataset.f;render()});
-  if(filterKid!=='all')list=list.filter(e=>!e.kids||!e.kids.length||e.kids.includes(filterKid));
-  $('sMeals').textContent=list.filter(e=>e.type==='meal').length;
-  $('sNap').textContent=mins(list.filter(e=>e.type==='nap').reduce((a,e)=>a+napMin(e),0));
-  $('sDiaper').textContent=list.filter(e=>e.type==='diaper'||e.type==='potty').length;
-  const tl=$('timeline');
-  if(!list.length){tl.innerHTML='<div class="empty">No entries yet for this day.<br>Tap <b>Voice note</b> or a quick-add button.</div>';}
-  else tl.innerHTML=list.slice().reverse().map(e=>{const t=TYPES[e.type]||TYPES.note;const s=summary(e);
-    return `<div class="item ${e.type==='incident'?'incident':''}" data-id="${e.id}">
-      <div class="t">${fmtTime(e.ts)}${e.kids&&e.kids.length?' · '+esc(kidNames(e.kids)):''}${e.voice?' · <span class="tag">voice</span>':''}</div>
-      <div class="h">${t.ic} ${t.lbl}</div>
-      ${s?`<div class="tx">${esc(s)}</div>`:''}${e.text?`<div class="tx">${esc(e.text)}</div>`:''}
-      ${e.photo?`<img alt="Photo" data-blob="photo">`:''}${e.audio?`<audio controls preload="none"></audio>`:''}
-    </div>`}).join('');
-  tl.querySelectorAll('.item').forEach(div=>{const e=list.find(x=>x.id===div.dataset.id);
-    const img=div.querySelector('img');if(img&&e.photo)img.src=URL.createObjectURL(e.photo);
-    const au=div.querySelector('audio');if(au&&e.audio)au.src=URL.createObjectURL(e.audio);
-    div.onclick=ev=>{if(ev.target.tagName==='AUDIO')return;openEntry(e.type,e)};});
-  renderClock();
-  if(curView==='report')renderReport(list);
-}
-
-/* ================= report ================= */
-async function buildReport(){
-  const list=(await byDate('entries',curDate)).sort((a,b)=>a.ts-b.ts);
-  const lines=[];const greet=S.parent?`Hi ${S.parent},`:'Hi,';
-  lines.push(greet,`Here is the day summary for ${fmtDate(curDate)}.`,'');
-  const groups=S.kids.length?[...S.kids.map(k=>({k,items:list.filter(e=>e.kids&&e.kids.includes(k.id))})),{k:{name:'General'},items:list.filter(e=>!e.kids||!e.kids.length)}]:[{k:null,items:list}];
-  for(const g of groups){if(!g.items.length)continue;
-    if(g.k)lines.push(`— ${g.k.name} —`);
-    const nap=g.items.filter(e=>e.type==='nap').reduce((a,e)=>a+napMin(e),0);
-    const meals=g.items.filter(e=>['meal','snack','bottle'].includes(e.type));
-    if(meals.length)lines.push('Food: '+meals.map(e=>`${fmtTime(e.ts)} ${summary(e)||TYPES[e.type].lbl}`).join('; '));
-    if(nap)lines.push('Nap: '+mins(nap));
-    const dp=g.items.filter(e=>['diaper','potty'].includes(e.type));
-    if(dp.length)lines.push(`Diaper/potty: ${dp.length} (`+dp.map(e=>summary(e)).filter(Boolean).join(', ')+')');
-    const act=g.items.filter(e=>['play','outing','school'].includes(e.type));
-    if(act.length)lines.push('Activities: '+act.map(e=>summary(e)||TYPES[e.type].lbl).join('; '));
-    const md=g.items.filter(e=>e.type==='mood').map(e=>summary(e));if(md.length)lines.push('Mood: '+md.join(', '));
-    const med=g.items.filter(e=>e.type==='medicine');if(med.length)lines.push('Medicine: '+med.map(e=>`${fmtTime(e.ts)} ${summary(e)}`).join('; '));
-    const inc=g.items.filter(e=>e.type==='incident');if(inc.length)lines.push('⚠️ Incident: '+inc.map(e=>`${fmtTime(e.ts)} ${summary(e).replace(/\n/g,'. ')}`).join('; '));
-    const notes=g.items.filter(e=>e.text&&!['incident'].includes(e.type)).map(e=>e.text);
-    if(notes.length)lines.push('Notes: '+notes.join(' '));
-    lines.push('');}
-  if(!list.length)lines.push('(No entries logged for this day.)','');
-  lines.push(S.name?`— ${S.name}`:'');
-  return lines.join('\n').trim();
-}
-async function renderReport(){$('repText').textContent=await buildReport()}
-$('shareRep').onclick=async()=>{const t=await buildReport();
-  if(navigator.share){try{await navigator.share({title:'Daily report',text:t})}catch(_){}}else{await copy(t)}};
-$('copyRep').onclick=async()=>copy(await buildReport());
-async function copy(t){try{await navigator.clipboard.writeText(t);toast('Copied')}catch(_){toast('Select the text and copy')}}
-$('searchBox').oninput=async ev=>{const q=ev.target.value.trim().toLowerCase();const out=$('searchRes');if(q.length<2){out.innerHTML='';return}
-  const all=(await getAll('entries')).filter(e=>((e.text||'')+' '+summary(e)+' '+kidNames(e.kids)+' '+(TYPES[e.type]||{}).lbl).toLowerCase().includes(q)).sort((a,b)=>b.ts-a.ts).slice(0,40);
-  out.innerHTML=all.length?all.map(e=>`<div class="li" data-d="${e.date}"><div><div class="sub">${fmtDate(e.date)} · ${fmtTime(e.ts)}</div><div>${TYPES[e.type].ic} ${esc((summary(e)+' '+(e.text||'')).trim().slice(0,90))}</div></div><span>›</span></div>`).join(''):'<div class="empty">No matches</div>';
-  out.querySelectorAll('.li').forEach(li=>li.onclick=()=>{curDate=li.dataset.d;show('log')});};
-
-/* ================= hours ================= */
-async function openShift(sh){
-  const s=sh||{id:uid(),date:curDate,in:nowTimeStr(),out:''};
-  openSheet(`<div class="hrow"><h2 style="margin:0">⏱️ Shift</h2><button class="link" id="cancelS">Cancel</button></div>
-    <label for="sDate">Date</label><input type="date" id="sDate" value="${s.date}">
-    <label for="sIn">Start</label><input type="time" id="sIn" value="${s.in}">
-    <label for="sOut">End</label><input type="time" id="sOut" value="${s.out||''}">
-    <label for="sBreak">Unpaid break (minutes)</label><input type="number" id="sBreak" value="${s.brk||0}" min="0">
-    <div style="height:14px"></div><button class="big" id="saveS">Save</button>
-    ${sh?'<div style="text-align:center;margin-top:8px"><button class="link danger" id="delS">Delete shift</button></div>':''}`,()=>{
-    $('cancelS').onclick=closeSheet;
-    $('saveS').onclick=async()=>{s.date=$('sDate').value;s.in=$('sIn').value;s.out=$('sOut').value;s.brk=+$('sBreak').value||0;await put('shifts',s);closeSheet();toast('Shift saved');renderHours();renderClock()};
-    if($('delS'))$('delS').onclick=async()=>{if(window.confirm('Delete this shift?')){await del('shifts',s.id);closeSheet();renderHours();renderClock()}};});
-}
-function shiftHrs(s){if(!s.in||!s.out)return 0;const [a,b]=s.in.split(':').map(Number),[c,d]=s.out.split(':').map(Number);let m=(c*60+d)-(a*60+b);if(m<0)m+=1440;return Math.max(0,m-(s.brk||0))/60}
-function weekStart(d=new Date()){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-x.getDay());return x}
-async function renderHours(){
-  const all=(await getAll('shifts')).sort((a,b)=>(b.date+b.in).localeCompare(a.date+a.in));
-  const ws=weekStart();const we=new Date(ws);we.setDate(we.getDate()+7);
-  const wk=all.filter(s=>{const d=new Date(s.date+'T12:00');return d>=ws&&d<we});
-  const h=wk.reduce((a,s)=>a+shiftHrs(s),0);const reg=Math.min(h,44),ot=Math.max(0,h-44);
-  const rate=+S.rate||0;const pay=reg*rate+ot*rate*1.5;
-  $('hWeek').textContent=h.toFixed(1);$('hPay').textContent='$'+pay.toFixed(2);
-  const n=$('otNote');if(ot>0){n.style.display='block';n.textContent=`${ot.toFixed(1)} overtime hours this week (paid at 1.5× = $${(rate*1.5).toFixed(2)}/h).`}else n.style.display='none';
-  $('shiftList').innerHTML=all.length?all.slice(0,60).map(s=>`<div class="li" data-id="${s.id}"><div><div>${fmtDate(s.date)}</div><div class="sub">${s.in} – ${s.out||'…working'}${s.brk?` · ${s.brk}m break`:''}</div></div><b>${s.out?shiftHrs(s).toFixed(2)+' h':''}</b></div>`).join(''):'<div class="empty">No shifts yet. Use “Clock in” at the top.</div>';
-  $('shiftList').querySelectorAll('.li').forEach(li=>li.onclick=()=>openShift(all.find(s=>s.id===li.dataset.id)));
-}
-async function openShiftNow(){const t=today();return (await byDate('shifts',t)).find(s=>!s.out)}
-async function renderClock(){const o=await openShiftNow();const b=$('clockBtn');b.textContent=o?'Clock out · '+o.in:'Clock in';b.classList.toggle('on',!!o)}
-$('clockBtn').onclick=async()=>{const o=await openShiftNow();
-  if(o){o.out=nowTimeStr();await put('shifts',o);toast('Clocked out · '+shiftHrs(o).toFixed(2)+' h')}
-  else{await put('shifts',{id:uid(),date:today(),in:nowTimeStr(),out:'',brk:0});toast('Clocked in')}
-  renderClock();if(curView==='hours')renderHours();};
-$('addShift').onclick=()=>openShift();
-
-/* ================= settings / kids ================= */
-function renderMore(){
-  $('setName').value=S.name;$('setParent').value=S.parent;$('setPhone').value=S.phone;$('setRate').value=S.rate;$('setLang').value=S.lang;$('setAudio').value=S.keepAudio;
-  $('parentLbl').textContent=S.parent?`${S.parent} (parent)`:'Parent';$('parentNum').textContent=S.phone||'Add in settings';
-  $('parentCall').href=S.phone?'tel:'+S.phone.replace(/[^\d+]/g,''):'#';
-  const al=S.kids.filter(k=>k.allergy).map(k=>`${esc(k.name)}: ${esc(k.allergy)}`);
-  $('allergyBox').style.display=al.length?'block':'none';$('allergyBox').innerHTML='<b>Allergies</b><br>'+al.join('<br>');
-  $('kidList').innerHTML=S.kids.length?S.kids.map(k=>`<div class="li" data-id="${k.id}"><div><div>${esc(k.name)}</div><div class="sub">${esc([k.age,k.allergy&&('allergy: '+k.allergy)].filter(Boolean).join(' · ')||'tap to edit')}</div></div><span>›</span></div>`).join(''):'<div class="sub" style="padding:8px 0">No children added yet.</div>';
-  $('kidList').querySelectorAll('.li').forEach(li=>li.onclick=()=>openKid(S.kids.find(k=>k.id===li.dataset.id)));
-}
-['setName','setParent','setPhone','setRate','setLang','setAudio'].forEach(id=>$(id).onchange=async()=>{
-  S.name=$('setName').value.trim();S.parent=$('setParent').value.trim();S.phone=$('setPhone').value.trim();S.rate=parseFloat($('setRate').value)||0;S.lang=$('setLang').value;S.keepAudio=$('setAudio').value;
-  await saveSettings();renderMore();toast('Saved');});
-function openKid(k){const kid=k||{id:uid(),name:'',age:'',allergy:'',notes:''};
-  openSheet(`<div class="hrow"><h2 style="margin:0">${k?'Edit child':'Add child'}</h2><button class="link" id="cancelK">Cancel</button></div>
-  <label for="kName">Name</label><input type="text" id="kName" value="${esc(kid.name)}">
-  <label for="kAge">Age</label><input type="text" id="kAge" value="${esc(kid.age)}" placeholder="e.g. 3 years">
-  <label for="kAll">Allergies</label><input type="text" id="kAll" value="${esc(kid.allergy)}" placeholder="e.g. peanuts (EpiPen in bag)">
-  <label for="kNotes">Routine notes</label><textarea id="kNotes" placeholder="nap time, foods, rules">${esc(kid.notes)}</textarea>
-  <div style="height:14px"></div><button class="big" id="saveK">Save</button>
-  ${k?'<div style="text-align:center;margin-top:8px"><button class="link danger" id="delK">Remove child</button></div>':''}`,()=>{
-  $('cancelK').onclick=closeSheet;
-  $('saveK').onclick=async()=>{kid.name=$('kName').value.trim();if(!kid.name){toast('Enter a name');return}kid.age=$('kAge').value.trim();kid.allergy=$('kAll').value.trim();kid.notes=$('kNotes').value.trim();
-    if(!k)S.kids.push(kid);await saveSettings();closeSheet();renderMore();render();toast('Saved')};
-  if($('delK'))$('delK').onclick=async()=>{if(window.confirm('Remove '+kid.name+'? Past log entries stay.')){S.kids=S.kids.filter(x=>x.id!==kid.id);await saveSettings();closeSheet();renderMore();render()}};});}
-$('addKid').onclick=()=>openKid();
-
-/* ================= backup ================= */
-const b64=blob=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(blob)});
-const unb64=async u=>(await fetch(u)).blob();
-function download(name,data,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
-$('exportJson').onclick=async()=>{const entries=await getAll('entries');
-  for(const e of entries){if(e.photo)e.photo=await b64(e.photo);if(e.audio)e.audio=await b64(e.audio)}
-  const data={app:'nannylog',v:1,exported:new Date().toISOString(),settings:S,entries,shifts:await getAll('shifts')};
-  download(`nanny-log-backup-${today()}.json`,JSON.stringify(data),'application/json');toast('Backup created')};
-$('exportCsv').onclick=async()=>{const rows=[['Date','Time','Child','Type','Details','Notes']];
-  (await getAll('entries')).sort((a,b)=>a.ts-b.ts).forEach(e=>rows.push([e.date,fmtTime(e.ts),kidNames(e.kids),(TYPES[e.type]||{}).lbl,summary(e).replace(/\n/g,' | '),e.text||'']));
-  const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
-  download(`nanny-log-${today()}.csv`,'﻿'+csv,'text/csv');toast('CSV exported')};
-$('importFile').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;
-  try{const d=JSON.parse(await f.text());if(d.app!=='nannylog')throw 0;
-    if(!window.confirm(`Restore ${d.entries.length} entries and ${d.shifts.length} shifts? Existing entries with the same ID will be replaced.`))return;
-    for(const e of d.entries){if(e.photo)e.photo=await unb64(e.photo);if(e.audio)e.audio=await unb64(e.audio);await put('entries',e)}
-    for(const s of d.shifts)await put('shifts',s);
-    if(d.settings){S={...S,...d.settings};await saveSettings()}
-    toast('Restored');renderMore();render();}catch(_){toast('Not a valid Nanny Log backup')}
-  ev.target.value=''};
-
-/* ================= navigation ================= */
-let curView='log';
-function show(v){curView=v;document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  $('datebar').style.display=(v==='log'||v==='report')?'flex':'none';
-  if(v==='hours')renderHours();if(v==='more')renderMore();render();scrollTo(0,0)}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
-function shiftDay(n){const d=new Date(curDate+'T12:00');d.setDate(d.getDate()+n);curDate=today(d);render()}
-$('prevDay').onclick=()=>shiftDay(-1);$('nextDay').onclick=()=>shiftDay(1);$('todayBtn').onclick=()=>{curDate=today();render()};
-$('voiceBtn').onclick=openVoice;
-$('quick').innerHTML=QUICK.map(q=>`<button class="qa" data-q="${q}"><span class="ic">${TYPES[q].ic}</span>${TYPES[q].lbl}</button>`).join('');
-$('quick').querySelectorAll('.qa').forEach(b=>b.onclick=()=>openEntry(b.dataset.q));
-
-/* ================= boot ================= */
-(async()=>{await openDB();const s=await kvGet('settings');if(s)S={...S,...s};
-  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
-  render();
-  if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
-})();
-</script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

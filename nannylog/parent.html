@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kids' Day">
+<meta name="robots" content="noindex,nofollow">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="styles.css">
+<title>Kids' Day · Nanny Log</title>
+<style>body{padding-bottom:40px}.kid{font-weight:700;font-size:18px;margin:14px 2px 2px}</style>
+</head>
+<body>
+<header id="hdr">
+  <div class="hrow"><h1 id="title">Today</h1><span class="sync" id="dot"><i></i><span id="dotTxt">connecting…</span></span></div>
+  <div class="datebar" id="datebar">
+    <button id="prev" aria-label="Previous day">‹</button><div class="d" id="dateLbl"></div><button id="next" aria-label="Next day">›</button><button id="todayB">Today</button>
+  </div>
+</header>
+<main id="main"><div class="empty">Loading…</div></main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const fmtDate=(s,o={weekday:'long',month:'short',day:'numeric'})=>new Date(s+'T12:00').toLocaleDateString('en-CA',o);
+const fmtTime=ts=>new Date(ts).toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'});
+const hms=ms=>{const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(x=>String(x).padStart(2,'0')).join(':')};
+const IC={meal:'🍽️',snack:'🍎',bottle:'🍼',nap:'😴',diaper:'🧷',potty:'🚽',play:'🧩',outing:'🌳',school:'🎒',medicine:'💊',mood:'🙂',incident:'🩹',photo:'📷',note:'📝',routine:'✅'};
+const LB={meal:'Meal',snack:'Snack',bottle:'Bottle',nap:'Nap',diaper:'Diaper',potty:'Potty',play:'Activity',outing:'Outing',school:'School',medicine:'Medicine',mood:'Mood',incident:'Incident',photo:'Photo',note:'Note',routine:'Routine'};
+const RL={morning:'Morning',afterschool:'After school',bedtime:'Bedtime'};
+const h=new URLSearchParams(location.hash.slice(1));
+let STATE=null, DAYS={}, date=today(), mode=h.get('s')?'snap':(h.get('db')&&h.get('f'))?'live':'none';
+const base=mode==='live'?`${h.get('db').replace(/\/+$/,'')}/families/${h.get('f')}`:'';
+
+function setDot(cls,txt){$('dot').className='sync '+cls;$('dotTxt').textContent=txt}
+function napMin(s){const m=/(\d+)h (\d+)m|(\d+)m$/.exec(s||'');return m?(m[1]?+m[1]*60+ +m[2]:+m[3]):0}
+function render(){
+  $('dateLbl').textContent=date===today()?'Today · '+fmtDate(date,{month:'short',day:'numeric'}):fmtDate(date);
+  $('title').textContent=STATE&&STATE.kids&&STATE.kids.length?STATE.kids.map(k=>k.name).join(' & ')+"'s day":"Kids' day";
+  if(mode==='none'){$('main').innerHTML='<div class="card empty">This link is incomplete. Ask the nanny to send the parent link again from Nanny Log → More → Share with parents.</div>';return}
+  if(!STATE){$('main').innerHTML='<div class="empty">Waiting for the first update from the nanny…</div>';return}
+  const day=DAYS[date]; const kids=STATE.kids||[]; let o='';
+  // live timers
+  const tm=Object.values(STATE.timers||{});
+  if(date===today()&&tm.length)o+=tm.map(t=>`<div class="timer run"><span style="font-size:24px">${t.kind==='nap'?'😴':'🍼'}</span><div class="grow"><div class="small">${t.kind==='nap'?'Sleeping now':'Feeding now'}${t.kid?' · '+esc((kids.find(k=>k.id===t.kid)||{}).name||''):''} · since ${fmtTime(t.start)}</div><div class="clk" data-start="${t.start}">${hms(Date.now()-t.start)}</div></div></div>`).join('');
+  if(date===today())o+=`<p class="small" style="margin:6px 2px">${STATE.clockedIn?'🟢 '+esc(STATE.nanny||'Nanny')+' is working now':'⚪ '+esc(STATE.nanny||'Nanny')+' is not clocked in'} · updated ${fmtTime(STATE.updated)}</p>`;
+  const list=day?day.entries||[]:[];
+  const groups=kids.length?[...kids.map(k=>({k,items:list.filter(e=>(e.kids||[]).includes(k.id))})),{k:{name:'General'},items:list.filter(e=>!(e.kids||[]).length)}]:[{k:null,items:list}];
+  if(!list.length)o+=`<div class="card empty">${day?'Nothing logged yet for this day.':(mode==='snap'?'This link only contains '+fmtDate(Object.keys(DAYS)[0]||date)+'.':'No log for this day.')}</div>`;
+  for(const g of groups){if(!g.items.length)continue;
+    const nap=g.items.filter(e=>e.type==='nap').reduce((a,e)=>a+napMin(e.s),0);
+    o+=`${g.k?`<div class="kid">${esc(g.k.name)}</div>`:''}<div class="row" style="gap:8px;margin:6px 0"><div class="stat"><b>${g.items.filter(e=>['meal','snack','bottle'].includes(e.type)).length}</b><span class="sub">Food</span></div><div class="stat"><b>${nap>=60?Math.floor(nap/60)+'h '+nap%60+'m':nap+'m'}</b><span class="sub">Nap</span></div><div class="stat"><b>${g.items.filter(e=>['diaper','potty'].includes(e.type)).length}</b><span class="sub">Diaper/Potty</span></div></div>`;
+    o+='<div class="tl">'+g.items.slice().reverse().map(e=>`<div class="item ${e.type==='incident'?'incident':''}"><div class="t">${fmtTime(e.ts)}${e.voice?' · <span class="tag">voice</span>':''}</div><div class="h">${IC[e.type]||'📝'} ${LB[e.type]||'Note'}</div>${e.s?`<div class="tx">${esc(e.s)}</div>`:''}${e.t?`<div class="tx">${esc(e.t)}</div>`:''}${e.en?`<div class="tr">🌐 ${esc(e.en)}</div>`:''}${e.photo?'<div class="small">📷 Photo saved on the nanny\'s phone</div>':''}</div>`).join('')+'</div>';
+  }
+  // routines
+  if(day&&day.routines&&kids.length){const rc=day.routines;let r='';
+    for(const k of kids){const R=k.routines||{};for(const key of Object.keys(RL)){const items=R[key]||[];if(!items.length)continue;const st=(rc[k.id]||{})[key]||[];const done=items.filter((_,i)=>st[i]).length;if(!done)continue;
+      r+=`<div style="margin:6px 0"><b>${esc(k.name)}</b> · ${RL[key]} <span class="small">${done}/${items.length}</span><div class="bar"><i style="width:${Math.round(done/items.length*100)}%"></i></div></div>`}}
+    if(r)o+=`<div class="card"><div class="sub" style="font-weight:600">Routines</div>${r}</div>`;}
+  if(date===today()){
+    const sh=STATE.shopping||[];
+    o+=`<div class="card"><div class="sub" style="font-weight:600">🛒 Running low</div>${sh.length?sh.map(s=>`<div class="check"><span>• ${esc(s.name)}</span></div>`).join(''):'<div class="small">Nothing needed.</div>'}</div>`;
+    const ev=STATE.events||[];
+    if(ev.length)o+=`<div class="card"><div class="sub" style="font-weight:600">🗓️ Coming up</div>${ev.slice(0,8).map(e=>`<div class="check"><span>${fmtDate(e.date,{weekday:'short',month:'short',day:'numeric'})}${e.time?' '+e.time:''} · ${esc(e.title)}${e.kid?' ('+esc((kids.find(k=>k.id===e.kid)||{}).name||'')+')':''}</span></div>`).join('')}</div>`;
+    const al=kids.filter(k=>k.allergy);if(al.length)o+=`<div class="note">Allergies on file: ${al.map(k=>esc(k.name)+': '+esc(k.allergy)).join(' · ')}</div>`;
+  }
+  o+='<p class="hint" style="margin-top:18px">Read-only view from Nanny Log. Photos and audio stay on the nanny\'s phone.</p>';
+  $('main').innerHTML=o;
+}
+setInterval(()=>document.querySelectorAll('.clk[data-start]').forEach(c=>c.textContent=hms(Date.now()- +c.dataset.start)),1000);
+
+/* ---- live mode ---- */
+async function getJSON(path){const r=await fetch(`${base}/${path}.json`);if(!r.ok)throw new Error(r.status);return r.json()}
+async function loadDay(d){try{DAYS[d]=await getJSON('days/'+d);setDot('on','live')}catch(_){setDot('err','offline')}render()}
+function stream(){
+  if(!window.EventSource)return poll();
+  let es;try{es=new EventSource(`${base}.json`)}catch(_){return poll()}
+  const apply=(path,data)=>{
+    const root={state:STATE,days:DAYS};
+    if(path==='/'){STATE=data&&data.state||null;DAYS=data&&data.days||{};}
+    else{const parts=path.split('/').filter(Boolean);let obj=root;for(let i=0;i<parts.length-1;i++){obj[parts[i]]=obj[parts[i]]||{};obj=obj[parts[i]]}obj[parts[parts.length-1]]=data;STATE=root.state;DAYS=root.days||{};}
+    setDot('on','live');render();};
+  es.addEventListener('put',ev=>{try{const m=JSON.parse(ev.data);apply(m.path,m.data)}catch(_){}});
+  es.addEventListener('patch',ev=>{try{const m=JSON.parse(ev.data);for(const k in m.data)apply((m.path==='/'?'':m.path)+'/'+k,m.data[k])}catch(_){}});
+  es.onerror=()=>{setDot('err','reconnecting…')};
+  es.addEventListener('cancel',()=>{setDot('err','access denied');es.close()});
+}
+async function poll(){try{STATE=await getJSON('state');DAYS[date]=await getJSON('days/'+date);setDot('on','updated '+fmtTime(Date.now()))}catch(_){setDot('err','offline')}render();setTimeout(poll,30000)}
+
+/* ---- snapshot mode ---- */
+async function loadSnap(){
+  try{const s=h.get('s'),enc=s[0];let b=s.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';
+    let bytes=Uint8Array.from(atob(b),c=>c.charCodeAt(0));
+    if(enc==='z'){const ds=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));bytes=new Uint8Array(await new Response(ds).arrayBuffer())}
+    const d=JSON.parse(new TextDecoder().decode(bytes));STATE=d.state;DAYS[d.day.date]=d.day;date=d.day.date;
+    setDot('','snapshot · '+fmtTime(d.day.updated));}catch(_){$('main').innerHTML='<div class="card empty">This link could not be opened. Ask for a new one.</div>';setDot('err','error');return}
+  $('datebar').style.display='none';render();
+}
+function go(n){const d=new Date(date+'T12:00');d.setDate(d.getDate()+n);date=today(d);render();if(mode==='live'&&!DAYS[date])loadDay(date)}
+$('prev').onclick=()=>go(-1);$('next').onclick=()=>go(1);$('todayB').onclick=()=>{date=today();render()};
+if(mode==='live')stream();else if(mode==='snap')loadSnap();else render();
+</script>
+</body>
+</html>
