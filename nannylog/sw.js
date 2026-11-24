@@ -1,4 +1,4 @@
-const CACHE = 'nannylog-v2';
+const CACHE = 'nannylog-v2-1';
 const FILES = ['./', './index.html', './app.js', './styles.css', './parent.html', './manifest.json', './vendor/jspdf.umd.min.js',
   './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });

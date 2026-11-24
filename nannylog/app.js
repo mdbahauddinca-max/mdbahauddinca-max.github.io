@@ -18,7 +18,7 @@ function openDB() {
 }
 const tx = (store, mode = 'readonly') => db.transaction(store, mode).objectStore(store);
 const P = req => new Promise((res, rej) => { req.onsuccess = () => res(req.result); req.onerror = () => rej(req.error); });
-const put = (s, v, k) => P(tx(s, 'readwrite').put(v, k)).then(r => { if (s !== 'kv' || ['settings', 'timers', 'shopping', 'events', 'perms'].includes(k) || String(k).startsWith('rc:')) scheduleSync(); return r; });
+const put = (s, v, k) => P(tx(s, 'readwrite').put(v, k)).then(r => { if (s !== 'kv' || ['settings', 'timers', 'shopping', 'events', 'perms', 'instr'].includes(k) || String(k).startsWith('rc:')) scheduleSync(); return r; });
 const del = (s, k) => P(tx(s, 'readwrite').delete(k)).then(r => { scheduleSync(); return r; });
 const getAll = s => P(tx(s).getAll());
 const byDate = (s, d) => P(tx(s).index('date').getAll(d));
@@ -28,7 +28,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 /* ================= state ================= */
 let S = { name: '', parent: '', phone: '', rate: 17.95, lang: 'en-CA', keepAudio: '1', translate: '1', kids: [], sync: { db: '', code: '', on: false } };
 let TIMERS = {};          // {nap:{start,kid}, feed:{start,kid,kind}}
-let SHOP = [], EVENTS = [], PERMS = [];
+let SHOP = [], EVENTS = [], PERMS = [], INSTR = [];
 let curDate = today(), filterKid = 'all', curView = 'log', planTab = 'routines', repWeek = 0, hrsWeek = 0;
 
 function today(d = new Date()) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -47,9 +47,9 @@ const TYPES = {
   nap: { ic: '😴', lbl: 'Nap' }, diaper: { ic: '🧷', lbl: 'Diaper' }, potty: { ic: '🚽', lbl: 'Potty' },
   play: { ic: '🧩', lbl: 'Activity' }, outing: { ic: '🌳', lbl: 'Outing' }, school: { ic: '🎒', lbl: 'School' },
   medicine: { ic: '💊', lbl: 'Medicine' }, mood: { ic: '🙂', lbl: 'Mood' }, incident: { ic: '🩹', lbl: 'Incident' },
-  photo: { ic: '📷', lbl: 'Photo' }, note: { ic: '📝', lbl: 'Note' }, voice: { ic: '🎙️', lbl: 'Voice note' }, routine: { ic: '✅', lbl: 'Routine' }
+  photo: { ic: '📷', lbl: 'Photo' }, cooking: { ic: '🍳', lbl: 'Cooking' }, tidying: { ic: '🧹', lbl: 'Tidying' }, instruction: { ic: '📌', lbl: 'Instruction' }, note: { ic: '📝', lbl: 'Note' }, voice: { ic: '🎙️', lbl: 'Voice note' }, routine: { ic: '✅', lbl: 'Routine' }
 };
-const QUICK = ['meal', 'snack', 'bottle', 'nap', 'diaper', 'potty', 'play', 'outing', 'school', 'medicine', 'mood', 'incident', 'photo', 'note'];
+const QUICK = ['meal', 'snack', 'bottle', 'nap', 'diaper', 'potty', 'play', 'outing', 'school', 'cooking', 'tidying', 'medicine', 'mood', 'incident', 'photo', 'note'];
 const DEFAULT_ROUTINES = {
   morning: ['Wake up, diaper or potty', 'Wash face, brush teeth', 'Get dressed', 'Breakfast', 'Pack bag / shoes on'],
   afterschool: ['Snack and water', 'Homework or reading', 'Outdoor play', 'Tidy toys'],
@@ -95,7 +95,9 @@ const DETAIL = {
   medicine: [['name', 'Medicine and dose', 'text', 'e.g. Tylenol 5 ml'], ['permission', 'Signed permission form?', 'select', ['Yes', 'No']]],
   mood: [['kind', 'Mood', 'select', ['Happy', 'Calm', 'Tired', 'Cranky', 'Sad', 'Unwell']]],
   incident: [['what', 'What happened?', 'text', 'e.g. fell at park, scraped knee'], ['action', 'What did you do?', 'text', 'e.g. cleaned, ice pack'], ['told', 'Parent informed?', 'select', ['Yes, called', 'Yes, text', 'Will tell at pick-up']]],
-  routine: [], photo: [], note: []
+  cooking: [['what', 'What did you cook?', 'text', 'e.g. chicken curry, rice, veggie soup'], ['for', 'For', 'select', ['Kids', 'Family dinner', 'Kids + family', 'Prep for tomorrow']], ['allergy', 'Allergy-safe checked?', 'select', ['Yes', 'Not needed']]],
+  tidying: [['area', 'Area', 'select', ['Toys / play area', "Kids' room", 'Kitchen', 'Dishes', 'Laundry (kids)', 'Living room', 'Bathroom', 'Other']], ['what', 'What was done?', 'text', 'e.g. washed bottles, folded clothes']],
+  routine: [], instruction: [], photo: [], note: []
 };
 function detailHtml(type, d = {}) {
   return (DETAIL[type] || []).map(([k, l, t, ph]) => {
@@ -111,7 +113,7 @@ function summary(e) {
     case 'bottle': return [d.ml && d.ml + ' ml', d.kind, d.dur && d.dur + ' min'].filter(Boolean).join(' · ');
     case 'nap': return d.start ? `${d.start}${d.end ? ' – ' + d.end : ' (sleeping)'}${napMin(e) ? ' · ' + mins(napMin(e)) : ''}` : '';
     case 'diaper': case 'potty': case 'mood': case 'school': return d.kind || '';
-    case 'play': return d.what || ''; case 'outing': return d.where || ''; case 'routine': return d.what || '';
+    case 'play': return d.what || ''; case 'cooking': return [d.what, d.for && `(${d.for.toLowerCase()})`].filter(Boolean).join(' '); case 'tidying': return [d.area, d.what].filter(Boolean).join(': '); case 'instruction': return d.what || ''; case 'outing': return d.where || ''; case 'routine': return d.what || '';
     case 'medicine': return [d.name, d.permission && ('signed form: ' + d.permission)].filter(Boolean).join(' · ');
     case 'incident': return [d.what, d.action && ('Action: ' + d.action), d.told && ('Parent: ' + d.told)].filter(Boolean).join('\n');
     default: return '';
@@ -547,6 +549,9 @@ async function weeklyPdf() {
       if (nap) w.text(`Nap: ${mins(nap)}`, { indent: 10, gap: 1 });
       const dp = g.items.filter(e => ['diaper', 'potty'].includes(e.type)); if (dp.length) w.text(`Diaper/potty: ${dp.length} (${dp.map(summary).filter(Boolean).join(', ')})`, { indent: 10, gap: 1 });
       line('Activities', g.items.filter(e => ['play', 'outing', 'school', 'routine'].includes(e.type)).map(e => summary(e) || TYPES[e.type].lbl));
+      line('Cooking', g.items.filter(e => e.type === 'cooking').map(summary));
+      line('Tidying', g.items.filter(e => e.type === 'tidying').map(summary));
+      line('Parent instructions done', g.items.filter(e => e.type === 'instruction').map(e => `${fmtTime(e.ts)} ${summary(e)}`));
       line('Mood', g.items.filter(e => e.type === 'mood').map(summary));
       line('Medicine given', g.items.filter(e => e.type === 'medicine').map(e => `${fmtTime(e.ts)} ${summary(e)}`));
       g.items.filter(e => e.type === 'incident').forEach(e => w.text(`INCIDENT ${fmtTime(e.ts)}: ${summary(e).replace(/\n/g, '. ')}${noteText(e) ? '. ' + noteText(e) : ''}`, { indent: 10, gap: 1, bold: true, color: [179, 38, 30] }));
@@ -604,7 +609,7 @@ async function render() {
   if (curView === 'plan') return renderPlan();
   if (curView === 'report') return renderReport();
   if (curView !== 'log') return;
-  renderTimers(); computeBottleDue(); renderTodayEvents();
+  renderTimers(); computeBottleDue(); renderTodayEvents(); renderInstr();
   let list = (await byDate('entries', curDate)).sort((a, b) => a.ts - b.ts);
   const fk = $('childFilter');
   fk.innerHTML = S.kids.length > 1 ? ['all', ...S.kids.map(k => k.id)].map(id => `<button class="chip ${filterKid === id ? 'on' : ''}" data-f="${id}">${id === 'all' ? 'All' : esc(kidName(id))}</button>`).join('') : '';
@@ -651,6 +656,9 @@ async function buildReport(date = curDate) {
     if (nap) L.push('Nap: ' + mins(nap));
     const dp = g.items.filter(e => ['diaper', 'potty'].includes(e.type)); if (dp.length) L.push(`Diaper/potty: ${dp.length} (` + dp.map(summary).filter(Boolean).join(', ') + ')');
     const act = g.items.filter(e => ['play', 'outing', 'school', 'routine'].includes(e.type)); if (act.length) L.push('Activities: ' + act.map(e => summary(e) || TYPES[e.type].lbl).join('; '));
+    const ck = g.items.filter(e => e.type === 'cooking'); if (ck.length) L.push('Cooking: ' + ck.map(summary).join('; '));
+    const td = g.items.filter(e => e.type === 'tidying'); if (td.length) L.push('Tidying: ' + td.map(summary).join('; '));
+    const ins = g.items.filter(e => e.type === 'instruction'); if (ins.length) L.push('Your instructions: ' + ins.map(e => '✓ ' + summary(e)).join('; '));
     const md = g.items.filter(e => e.type === 'mood').map(summary); if (md.length) L.push('Mood: ' + md.join(', '));
     const med = g.items.filter(e => e.type === 'medicine'); if (med.length) L.push('Medicine: ' + med.map(e => `${fmtTime(e.ts)} ${summary(e)}`).join('; '));
     const inc = g.items.filter(e => e.type === 'incident'); if (inc.length) L.push('⚠️ Incident: ' + inc.map(e => `${fmtTime(e.ts)} ${summary(e).replace(/\n/g, '. ')}`).join('; '));
@@ -751,6 +759,82 @@ function openKid(k) {
 $('addKid').onclick = () => openKid();
 $('addPerm').onclick = () => openPerm();
 
+
+/* ================= instructions from Mom / Dad ================= */
+const saveInstr = () => put('kv', INSTR, 'instr');
+function instrApplies(i, d) {
+  if (i.archived) return false;
+  const dow = new Date(d + 'T12:00').getDay();
+  if (i.repeat === 'daily') return d >= i.date;
+  if (i.repeat === 'weekdays') return d >= i.date && dow > 0 && dow < 6;
+  return i.date === d;
+}
+const instrFor = d => INSTR.filter(i => instrApplies(i, d)).sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
+function fromOptions() { const o = ['Mom', 'Dad']; if (S.parent && !o.includes(S.parent)) o.unshift(S.parent); return o; }
+function renderInstr() {
+  const list = instrFor(curDate), box = $('instrBox'); if (!box) return;
+  const pending = list.filter(i => !(i.done || {})[curDate]).length;
+  box.innerHTML = `<div class="card" style="padding:12px"><div class="hrow"><div class="sub" style="font-weight:600">📌 Instructions from Mom & Dad${list.length ? ` · ${pending ? pending + ' to do' : 'all done ✓'}` : ''}</div><button class="link" id="addInstr">+ Add</button></div>
+    ${list.length ? list.map(i => { const dn = (i.done || {})[curDate]; return `<div class="check ${dn ? 'done' : ''}" style="align-items:flex-start"><input type="checkbox" data-i="${i.id}" ${dn ? 'checked' : ''} aria-label="Mark done" style="margin-top:2px"><div style="flex:1" data-open="${i.id}"><span>${esc(i.text)}</span>${i.textEn ? `<div class="tr" style="margin-top:4px">🌐 ${esc(i.textEn)}</div>` : ''}<div class="small">${esc(i.from)}${i.kid ? ' · ' + esc(kidName(i.kid)) : ''}${i.time ? ' · by ' + fmtTime(tsFrom(curDate, i.time)) : ''}${i.repeat !== 'once' ? ' · ' + (i.repeat === 'daily' ? 'every day' : 'weekdays') : ''}${i.source === 'parent' ? ' · <span class="tag">sent by parent</span>' : ''}${dn ? ' · done ' + fmtTime(dn) : ''}</div></div></div>`; }).join('') : '<div class="small" style="padding:6px 0">No instructions for this day. Add what Mom or Dad asked, or they can send them from the parent link.</div>'}</div>`;
+  $('addInstr').onclick = () => openInstr();
+  box.querySelectorAll('[data-i]').forEach(cb => cb.onchange = async () => {
+    const i = INSTR.find(x => x.id === cb.dataset.i); i.done = i.done || {};
+    if (cb.checked) {
+      i.done[curDate] = curDate === today() ? Date.now() : tsFrom(curDate, nowTimeStr());
+      await put('entries', { id: 'ins-' + i.id + '-' + curDate, date: curDate, ts: i.done[curDate], type: 'instruction', kids: i.kid ? [i.kid] : [], details: { what: `${i.textEn || i.text} (${i.from})` }, text: '' });
+      toast('Done ✓');
+    } else { delete i.done[curDate]; await del('entries', 'ins-' + i.id + '-' + curDate); }
+    await saveInstr(); render();
+  });
+  box.querySelectorAll('[data-open]').forEach(d => d.onclick = () => openInstr(INSTR.find(x => x.id === d.dataset.open)));
+}
+function openInstr(ins) {
+  const i = ins || { id: uid(), from: fromOptions()[0], text: '', textEn: '', kid: '', date: curDate, time: '', repeat: 'once', source: 'nanny', done: {}, created: Date.now() };
+  openSheet(`<div class="hrow"><h2 style="margin:0">📌 Instruction</h2><button class="link" id="cancelI">Cancel</button></div>
+    <label>From</label><div class="seg" id="iFrom">${[...new Set([...fromOptions(), i.from])].map(f => `<button type="button" data-f="${esc(f)}" class="${f === i.from ? 'on' : ''}">${esc(f)}</button>`).join('')}</div>
+    ${kidChips(i.kid ? [i.kid] : [], 'iKid', true)}
+    <label for="iText">What should be done?</label>
+    <textarea id="iText" placeholder="e.g. Give Maya her vitamins after lunch. No screen time today. Pack swimming bag.">${esc(i.text)}</textarea>
+    ${trButtonHtml('iTrBtn')}
+    <div class="trwrap" style="display:${i.textEn ? 'block' : 'none'}"><label for="iTextEn">English translation (editable)</label><textarea id="iTextEn" style="min-height:70px">${esc(i.textEn || '')}</textarea></div>
+    <div class="row"><div style="flex:1"><label for="iDate">Starting</label><input type="date" id="iDate" value="${i.date}"></div><div style="flex:1"><label for="iTime">By time (optional)</label><input type="time" id="iTime" value="${i.time || ''}"></div></div>
+    <label for="iRep">Repeat</label><select id="iRep">${[['once', 'Only this day'], ['daily', 'Every day'], ['weekdays', 'Weekdays (Mon–Fri)']].map(([v, l]) => `<option value="${v}" ${i.repeat === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+    <p class="small">Tip: tap the 🎤 on the keyboard to dictate exactly what the parent said.</p>
+    <div style="height:10px"></div><button class="big" id="saveI">Save</button>
+    ${ins ? `<div style="text-align:center;margin-top:8px"><button class="link danger" id="delI">${ins.repeat !== 'once' ? 'Stop this instruction' : 'Delete'}</button></div>` : ''}`, () => {
+    $('cancelI').onclick = closeSheet; bindKidChips('iKid');
+    $('iFrom').querySelectorAll('button').forEach(b => b.onclick = () => $('iFrom').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)));
+    const trb = $('iTrBtn'); const upd = () => { if (trb) trb.style.display = hasBangla($('iText').value) ? '' : 'none'; }; upd(); $('iText').addEventListener('input', upd);
+    bindTranslate('iTrBtn', 'iText', 'iTextEn');
+    $('saveI').onclick = async () => {
+      i.text = $('iText').value.trim(); if (!i.text) { toast('Write the instruction'); return; }
+      i.textEn = ($('iTextEn').value || '').trim(); i.from = ($('iFrom').querySelector('.on') || {}).dataset?.f || 'Mom';
+      i.kid = readKids('iKid')[0] || ''; i.date = $('iDate').value || curDate; i.time = $('iTime').value; i.repeat = $('iRep').value;
+      if (!ins) INSTR.push(i); await saveInstr(); closeSheet(); render(); toast('Instruction saved');
+    };
+    if ($('delI')) $('delI').onclick = async () => {
+      if (!confirm('Remove this instruction?')) return;
+      if (ins.repeat !== 'once' && Object.keys(ins.done || {}).length) ins.archived = true; else INSTR = INSTR.filter(x => x.id !== ins.id);
+      await saveInstr(); closeSheet(); render();
+    };
+  });
+}
+async function pullInbox() {
+  if (!S.sync.on || !S.sync.db) return;
+  const base = `${S.sync.db.replace(/\/+$/, '')}/families/${S.sync.code}/inbox`;
+  const r = await fetch(base + '.json'); if (!r.ok) throw new Error('HTTP ' + r.status);
+  const box = await r.json(); if (!box) return;
+  let n = 0;
+  for (const [id, m] of Object.entries(box)) {
+    if (m && m.text && !INSTR.some(x => x.id === id)) {
+      INSTR.push({ id, from: String(m.from || 'Parent').slice(0, 30), text: String(m.text).slice(0, 1000), textEn: '', kid: S.kids.some(k => k.id === m.kid) ? m.kid : '', date: /^\d{4}-\d{2}-\d{2}$/.test(m.date) ? m.date : today(), time: /^\d{2}:\d{2}$/.test(m.time || '') ? m.time : '', repeat: ['once', 'daily', 'weekdays'].includes(m.repeat) ? m.repeat : 'once', source: 'parent', done: {}, created: m.created || Date.now() });
+      n++;
+    }
+    await fetch(`${base}/${id}.json`, { method: 'DELETE' });
+  }
+  if (n) { await P(tx('kv', 'readwrite').put(INSTR, 'instr')); buzz(n === 1 ? 'New instruction from a parent' : n + ' new instructions from parents'); if (curView === 'log') renderInstr(); }
+}
+
 /* ================= parent sharing (Firebase live sync + snapshot) ================= */
 let syncTimer = null, syncState = 'off', syncing = false;
 function scheduleSync() { if (!S.sync || !S.sync.on) return; clearTimeout(syncTimer); syncTimer = setTimeout(doSync, 1500); }
@@ -769,7 +853,8 @@ async function statePayload() {
     kids: S.kids.map(k => ({ id: k.id, name: k.name, age: k.age, allergy: k.allergy, routines: k.routines || DEFAULT_ROUTINES, bottleEvery: +k.bottleEvery || 0 })),
     timers: TIMERS, shopping: SHOP.filter(x => !x.done).map(x => ({ name: x.name, added: x.added })),
     events: upcoming(14).map(o => ({ title: o.ev.title, date: o.date, time: o.ev.time, kid: o.ev.kid, notes: o.ev.notes })),
-    clockedIn: !!(await openShiftNow()), report: await buildReport(today())
+    clockedIn: !!(await openShiftNow()), report: await buildReport(today()),
+    instructions: instrFor(today()).map(i => ({ id: i.id, from: i.from, text: i.text, en: i.textEn || '', kid: i.kid, time: i.time, repeat: i.repeat, done: (i.done || {})[today()] || 0 }))
   };
 }
 async function fbPut(path, data) {
@@ -779,7 +864,7 @@ async function fbPut(path, data) {
 }
 async function doSync() {
   if (!S.sync.on || !S.sync.db || syncing) return; syncing = true;
-  try { await fbPut('state', await statePayload()); await fbPut('days/' + today(), await dayPayload(today())); if (curDate !== today()) await fbPut('days/' + curDate, await dayPayload(curDate)); syncState = 'ok'; }
+  try { await pullInbox(); await fbPut('state', await statePayload()); await fbPut('days/' + today(), await dayPayload(today())); if (curDate !== today()) await fbPut('days/' + curDate, await dayPayload(curDate)); syncState = 'ok'; }
   catch (err) { syncState = 'err'; }
   syncing = false; renderSyncDot();
 }
@@ -880,13 +965,13 @@ $('quick').querySelectorAll('.qa').forEach(b => b.onclick = () => openEntry(b.da
 async function loadKV() {
   const s = await kvGet('settings'); if (s) S = { ...S, ...s }; S.sync = S.sync || { db: '', code: '', on: false };
   if (S.translate === undefined) S.translate = '1';
-  TIMERS = (await kvGet('timers')) || {}; SHOP = (await kvGet('shopping')) || []; EVENTS = (await kvGet('events')) || []; PERMS = (await kvGet('perms')) || [];
+  TIMERS = (await kvGet('timers')) || {}; SHOP = (await kvGet('shopping')) || []; EVENTS = (await kvGet('events')) || []; PERMS = (await kvGet('perms')) || []; INSTR = (await kvGet('instr')) || [];
 }
 (async () => {
   await openDB(); await loadKV();
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
   render(); scheduleSync();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) { if (curDate !== today() && curView === 'log') { } render(); scheduleSync(); } });
-  setInterval(() => S.sync.on && doSync(), 60000);
+  setInterval(() => S.sync.on && doSync(), 30000);
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => { });
 })();

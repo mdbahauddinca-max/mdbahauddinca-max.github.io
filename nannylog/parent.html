@@ -27,8 +27,8 @@ const today=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(
 const fmtDate=(s,o={weekday:'long',month:'short',day:'numeric'})=>new Date(s+'T12:00').toLocaleDateString('en-CA',o);
 const fmtTime=ts=>new Date(ts).toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit'});
 const hms=ms=>{const s=Math.max(0,Math.floor(ms/1000));return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(x=>String(x).padStart(2,'0')).join(':')};
-const IC={meal:'🍽️',snack:'🍎',bottle:'🍼',nap:'😴',diaper:'🧷',potty:'🚽',play:'🧩',outing:'🌳',school:'🎒',medicine:'💊',mood:'🙂',incident:'🩹',photo:'📷',note:'📝',routine:'✅'};
-const LB={meal:'Meal',snack:'Snack',bottle:'Bottle',nap:'Nap',diaper:'Diaper',potty:'Potty',play:'Activity',outing:'Outing',school:'School',medicine:'Medicine',mood:'Mood',incident:'Incident',photo:'Photo',note:'Note',routine:'Routine'};
+const IC={meal:'🍽️',snack:'🍎',bottle:'🍼',nap:'😴',diaper:'🧷',potty:'🚽',play:'🧩',outing:'🌳',school:'🎒',medicine:'💊',mood:'🙂',incident:'🩹',photo:'📷',note:'📝',routine:'✅',cooking:'🍳',tidying:'🧹',instruction:'📌'};
+const LB={meal:'Meal',snack:'Snack',bottle:'Bottle',nap:'Nap',diaper:'Diaper',potty:'Potty',play:'Activity',outing:'Outing',school:'School',medicine:'Medicine',mood:'Mood',incident:'Incident',photo:'Photo',note:'Note',routine:'Routine',cooking:'Cooking',tidying:'Tidying',instruction:'Instruction done'};
 const RL={morning:'Morning',afterschool:'After school',bedtime:'Bedtime'};
 const h=new URLSearchParams(location.hash.slice(1));
 let STATE=null, DAYS={}, date=today(), mode=h.get('s')?'snap':(h.get('db')&&h.get('f'))?'live':'none';
@@ -60,6 +60,12 @@ function render(){
       r+=`<div style="margin:6px 0"><b>${esc(k.name)}</b> · ${RL[key]} <span class="small">${done}/${items.length}</span><div class="bar"><i style="width:${Math.round(done/items.length*100)}%"></i></div></div>`}}
     if(r)o+=`<div class="card"><div class="sub" style="font-weight:600">Routines</div>${r}</div>`;}
   if(date===today()){
+    const ins=STATE.instructions||[];
+    o+=`<div class="card"><div class="sub" style="font-weight:600">📌 Your instructions for today</div>${ins.length?ins.map(i=>`<div class="check ${i.done?'done':''}"><span style="flex:1">${i.done?'✅':'⬜'} ${esc(i.text)}${i.en?`<span class="small"> (${esc(i.en)})</span>`:''}<br><span class="small">${esc(i.from)}${i.kid?' · '+esc((kids.find(k=>k.id===i.kid)||{}).name||''):''}${i.time?' · by '+fmtTime(new Date(today()+'T'+i.time).getTime()):''}${i.done?' · done '+fmtTime(i.done):''}</span></span></div>`).join(''):'<div class="small">No instructions yet.</div>'}
+      ${mode==='live'?`<div id="sendBox"><label for="pi">Send a new instruction to the nanny</label><textarea id="pi" placeholder="e.g. Please give Maya her vitamins after lunch" style="min-height:70px"></textarea>
+      <div class="row" style="margin-top:6px"><select id="piFrom" style="flex:1"><option>Mom</option><option>Dad</option></select>${kids.length>1?`<select id="piKid" style="flex:1"><option value="">All kids</option>${kids.map(k=>`<option value="${k.id}">${esc(k.name)}</option>`).join('')}</select>`:''}</div>
+      <div class="row" style="margin-top:6px"><select id="piRep" style="flex:1"><option value="once">Today only</option><option value="daily">Every day</option><option value="weekdays">Weekdays</option></select><input type="time" id="piTime" style="flex:1" aria-label="By time"></div>
+      <div style="height:8px"></div><button class="big" id="piSend">Send to nanny</button><div class="small" id="piMsg" style="margin-top:6px"></div></div>`:'<p class="small">To send instructions from here, ask the nanny for the live link.</p>'}</div>`;
     const sh=STATE.shopping||[];
     o+=`<div class="card"><div class="sub" style="font-weight:600">🛒 Running low</div>${sh.length?sh.map(s=>`<div class="check"><span>• ${esc(s.name)}</span></div>`).join(''):'<div class="small">Nothing needed.</div>'}</div>`;
     const ev=STATE.events||[];
@@ -67,7 +73,20 @@ function render(){
     const al=kids.filter(k=>k.allergy);if(al.length)o+=`<div class="note">Allergies on file: ${al.map(k=>esc(k.name)+': '+esc(k.allergy)).join(' · ')}</div>`;
   }
   o+='<p class="hint" style="margin-top:18px">Read-only view from Nanny Log. Photos and audio stay on the nanny\'s phone.</p>';
+  const keep=document.activeElement&&document.activeElement.id==='pi'?$('pi').value:null;
+  if(keep!==null&&$('sendBox'))return; // don't wipe what the parent is typing
   $('main').innerHTML=o;
+  if($('piSend'))$('piSend').onclick=sendInstr;
+}
+async function sendInstr(){
+  const text=$('pi').value.trim();if(!text){$('piMsg').textContent='Write the instruction first.';return}
+  const id='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const body={from:$('piFrom').value,text,kid:$('piKid')?$('piKid').value:'',date:today(),time:$('piTime').value,repeat:$('piRep').value,created:Date.now()};
+  $('piSend').disabled=true;$('piMsg').textContent='Sending…';
+  try{const r=await fetch(`${base}/inbox/${id}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw 0;
+    $('pi').value='';$('piMsg').textContent='Sent ✓ It appears on the nanny\'s phone the next time her app checks (within about 30 seconds while it is open).';}
+  catch(_){$('piMsg').textContent='Could not send. Check the internet connection.'}
+  $('piSend').disabled=false;
 }
 setInterval(()=>document.querySelectorAll('.clk[data-start]').forEach(c=>c.textContent=hms(Date.now()- +c.dataset.start)),1000);
 
